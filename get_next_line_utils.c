@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line_utils.c                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mohmajdo <mohmajdo@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/11/29 17:38:42 by mohmajdo          #+#    #+#             */
+/*   Updated: 2024/12/03 06:03:15 by mohmajdo         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "get_next_line.h"
 
 char	*ft_strjoin(char *s1, char *s2)
@@ -6,8 +18,8 @@ char	*ft_strjoin(char *s1, char *s2)
 	size_t	len1;
 	size_t	len2;
 
-	len1 = ft_len(s1);
-	len2 = ft_len(s2);
+	len1 = ft_strlen(s1);
+	len2 = ft_strlen(s2);
 	joined = malloc(len1 + len2 + 1);
 	if (!joined)
 		return (NULL);
@@ -34,6 +46,21 @@ char	*ft_strcpy(char *dst, char *src)
 	return (dst);
 }
 
+char	*ft_strncpy(char *dst, char *src, size_t n)
+{
+	if (dst == src)
+		return (dst);
+	while (n > 0)
+	{
+		*dst = *src;
+		dst++;
+		src++;
+		n--;
+	}
+	*dst = '\0';
+	return (dst);
+}
+
 char	*ft_substr(char *s, unsigned int start, size_t len)
 {
 	char	*sub;
@@ -43,9 +70,9 @@ char	*ft_substr(char *s, unsigned int start, size_t len)
 	i = 0;
 	if (!s || start >= strlen(s))
 		return (NULL);
-	s_len = ft_len(s);
-	if (len > s_len - start)
-		len = s_len - start;
+	s_len = ft_strlen(s);
+	if (len > (unsigned int)ft_strlen(s + start))
+		len = (unsigned int)ft_strlen(s + start);
 	sub = malloc(len + 1);
 	if (!sub)
 		return (NULL);
@@ -58,7 +85,7 @@ char	*ft_substr(char *s, unsigned int start, size_t len)
 	return (sub);
 }
 
-int	ft_len(char *s)
+int	ft_strlen(char *s)
 {
 	int	i;
 

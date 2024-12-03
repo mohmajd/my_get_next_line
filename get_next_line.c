@@ -1,91 +1,109 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mohmajdo <mohmajdo@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/11/29 17:38:49 by mohmajdo          #+#    #+#             */
+/*   Updated: 2024/12/03 05:55:32 by mohmajdo         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "get_next_line.h"
 
-static int	ft_new(char *buffer)
+static char	*ft_get_line(int fd, char *line)
 {
-	while (buffer && *buffer)
-	{
-		if (*buffer == '\n')
-			return (1);
-		buffer++;
-	}
-	return (0);
-}
+	char	*buffer;
+	char	*tmp;
+	int		count;
 
-static char	*ft_read(int fd, char **rest)
-{
-	char	*temp;
-	char	buffer[BUFFER_SIZE + 1];
-	ssize_t	bytes_read;
-
-	bytes_read = read(fd, buffer, BUFFER_SIZE);
-	if (bytes_read <= 0)
+	buffer = (char *)malloc(BUFFER_SIZE + 1);
+	if (!buffer)
 		return (NULL);
-	buffer[bytes_read] = '\0';
-	temp = ft_strjoin(*rest, buffer);
-	*rest = temp;
-	return (*rest);
+	count = 1;
+	while (!ft_strchr(line, '\n') && count > 0)
+	{
+		count = read(fd, buffer, BUFFER_SIZE);
+		if (count == -1)
+		{
+			free (buffer);
+			return (NULL);
+		}
+		buffer[count] = '\0';
+		tmp = ft_strjoin(line, buffer);
+		if (!line)
+			return (free (line), NULL);
+	}
+	free (line);
+	line = tmp;
+	return (line);
 }
 
-static char	*ft_rest(char **rest)
+static char	*ft_new_line(char *line)
 {
-	char	*line;
+	char	*str;
+	char	*newline;
 
-	if (*rest && ft_len(*rest) > 0)
+	newline = ft_strchr(line, '\n');
+	if (!newline)
+		str = malloc(newline - line + 1);
+	else
+		str = malloc(ft_strlen(line + 1));
+	if (!str)
+		return (NULL);
+	if (newline)
+		ft_strncpy(str, line, newline - line + 1);
+	else
+		ft_strncpy(str, line, ft_strlen(line) + 1);
+	return (free (line), str);
+}
+
+static char	*ft_line(char *line)
+{
+	int		i;
+	int		j;
+	char	*str;
+
+	if (!line)
+		return (NULL);
+	i = 0;
+	while (line[i] && line[i] != '\n')
+		i++;
+	if (line[i] == '\n')
+		str = (char *)malloc(i + 2);
+	else
+		str = (char *)malloc(i + 1);
+	if (!str)
+		return (NULL);
+	j = 0;
+	while (i < j)
 	{
-		line = ft_substr(*rest, 0, ft_len(*rest));
-		free(*rest);
-		*rest = NULL;
-		return (line);
+		str[j] = line[j];
+		j++;
 	}
-	free(*rest);
-	*rest = NULL;
-	return (NULL);
+	if (line [i] == '\n')
+		str[i + 1] = '\n';
+	str[i] = '\0';
+	return (str);
 }
 
 char	*get_next_line(int fd)
 {
-	static char	*buffer;
-	char		*line;
+	static char	*line;
+	char		*buffer;
 	char		*newline;
-	char		*new_rest;
-	int			count;
 
+	line = NULL;
 	if (fd < 0 || BUFFER_SIZE <= 0)
+		return (0);
+	line = ft_get_line(fd, line);
+	if (!line)
 		return (NULL);
-	while (1)
-	{
-		if ((!buffer || !ft_new(buffer)) && !ft_read(fd, &buffer))
-			break ;
-		newline = ft_strchr(buffer, '\n');
-		if (newline)
-		{
-			count = newline - buffer + 1;
-			line = ft_substr(buffer, 0, count);
-			new_rest = ft_substr(buffer, count, BUFFER_SIZE);
-			free(buffer);
-			buffer = new_rest;
-			return (line);
-		}
-		return (ft_rest(&buffer));
-	}
-	return (ft_rest(&buffer));
+	buffer = ft_line(line);
+	newline = ft_new_line(line);
+	free (line);
+	line = newline;
+	return (buffer);
 }
 
-int main()
-{
-	int fd = open("file.txt", O_RDWR);
-	printf("%s", get_next_line(fd));
-	printf("%s", get_next_line(fd));
-	printf("%s", get_next_line(fd));
-	printf("%s", get_next_line(fd));
-	printf("%s", get_next_line(fd));
-	printf("%s", get_next_line(fd));
-	printf("%s", get_next_line(fd));
-	printf("%s", get_next_line(fd));
-	printf("%s", get_next_line(fd));
-	printf("%s", get_next_line(fd));
-	printf("%s", get_next_line(fd));
-	printf("%s", get_next_line(fd));
-	printf("%s", get_next_line(fd));
-	printf("%s", get_next_line(fd));
-}
