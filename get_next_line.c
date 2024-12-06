@@ -5,105 +5,104 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: mohmajdo <mohmajdo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/29 17:38:49 by mohmajdo          #+#    #+#             */
-/*   Updated: 2024/12/03 05:55:32 by mohmajdo         ###   ########.fr       */
+/*   Created: 2024/11/29 17:06:56 by mohmajdo          #+#    #+#             */
+/*   Updated: 2024/12/06 15:40:23 by mohmajdo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-static char	*ft_get_line(int fd, char *line)
+static char	*ft_read(int fd, char *old)
 {
 	char	*buffer;
 	char	*tmp;
 	int		count;
 
-	buffer = (char *)malloc(BUFFER_SIZE + 1);
-	if (!buffer)
-		return (NULL);
-	count = 1;
-	while (!ft_strchr(line, '\n') && count > 0)
+	if (ft_strchr(old, '\n'))
+		return (old);
+	buffer = malloc(1);
+	buffer[0] = '\0';
+	tmp = (char *)malloc(BUFFER_SIZE + 1);
+	if (!tmp)
 	{
-		count = read(fd, buffer, BUFFER_SIZE);
-		if (count == -1)
-		{
-			free (buffer);
-			return (NULL);
-		}
-		buffer[count] = '\0';
-		tmp = ft_strjoin(line, buffer);
-		if (!line)
-			return (free (line), NULL);
-	}
-	free (line);
-	line = tmp;
-	return (line);
-}
-
-static char	*ft_new_line(char *line)
-{
-	char	*str;
-	char	*newline;
-
-	newline = ft_strchr(line, '\n');
-	if (!newline)
-		str = malloc(newline - line + 1);
-	else
-		str = malloc(ft_strlen(line + 1));
-	if (!str)
+		free (buffer);
 		return (NULL);
-	if (newline)
-		ft_strncpy(str, line, newline - line + 1);
-	else
-		ft_strncpy(str, line, ft_strlen(line) + 1);
-	return (free (line), str);
+	}
+	tmp[BUFFER_SIZE] = '\0';
+	count = read(fd, tmp, BUFFER_SIZE);
+	while (count > 0)
+	{
+		tmp[count] = '\0';
+		buffer = ft_strjoin(buffer, tmp);
+		if (ft_strchr(tmp, '\n'))
+			break ;
+		count = read(fd, tmp, BUFFER_SIZE);
+	}
+	return (free(tmp), free (buffer), ft_strjoin(old, buffer));
 }
 
-static char	*ft_line(char *line)
+static char	*ft_line(char *str)
 {
+	int		y;
 	int		i;
-	int		j;
-	char	*str;
+	char	*line;
 
+	if (*str == '\0')
+		return (NULL);
+	y = 0;
+	while (str[y] != '\0' && str[y] != '\n' && (str[y] > 31 && str[y] < 127))
+		y++;
+	if (str[y] == '\n')
+		line = malloc(y + 2);
+	if (str[y] == '\0')
+		line = malloc(y + 1);
 	if (!line)
 		return (NULL);
 	i = 0;
-	while (line[i] && line[i] != '\n')
-		i++;
-	if (line[i] == '\n')
-		str = (char *)malloc(i + 2);
-	else
-		str = (char *)malloc(i + 1);
-	if (!str)
-		return (NULL);
-	j = 0;
-	while (i < j)
+	while (i < y)
 	{
-		str[j] = line[j];
-		j++;
+		line[i] = str[i];
+		i++;
 	}
-	if (line [i] == '\n')
-		str[i + 1] = '\n';
-	str[i] = '\0';
-	return (str);
+	if (str[y] == '\n')
+		line[i++] = '\n';
+	line[i] = '\0';
+	return (line);
 }
+
+static char	*ft_rest(char *str)
+{
+	char	*start;
+	char	*rest;
+
+	start = ft_strchr(str, '\n');
+	if (start != NULL)
+		start++;
+	if (start == NULL || *start == '\0')
+	{
+		free (str);
+		return (NULL);
+	}
+	rest = malloc(ft_strlen(start) + 1);
+	if (!rest)
+		return (NULL);
+	ft_strcpy(rest, start);
+	return (free (str), rest);
+}
+
 
 char	*get_next_line(int fd)
 {
-	static char	*line;
+	static char	*rest;
+	char		*line;
 	char		*buffer;
-	char		*newline;
 
-	line = NULL;
 	if (fd < 0 || BUFFER_SIZE <= 0)
-		return (0);
-	line = ft_get_line(fd, line);
-	if (!line)
 		return (NULL);
-	buffer = ft_line(line);
-	newline = ft_new_line(line);
-	free (line);
-	line = newline;
-	return (buffer);
+	buffer = ft_read(fd, rest);
+	if (!buffer)
+		return (NULL);
+	line = ft_line(buffer);
+	rest = ft_rest(buffer);
+	return (line);
 }
-
